@@ -1,242 +1,392 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Penggunaan Sepeda Berdasarkan Musim dan Tipe Pengguna</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f8f9fa;
-        }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f8f9fa;
+      }
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
 
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-        }
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 1.8rem;
+      }
 
-        .bar {
-            transition: fill 0.3s;
-        }
+      .subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 1rem;
+      }
 
-        .bar:hover {
-            fill-opacity: 0.8;
-        }
+      .bar {
+        transition: fill 0.3s;
+        cursor: pointer;
+      }
 
-        .value-label {
-            text-anchor: middle;
-            font-size: 11px;
-            font-weight: bold;
-        }
+      .bar:hover {
+        fill-opacity: 0.8;
+      }
 
-        .tooltip {
-            position: absolute;
-            padding: 10px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            border-radius: 5px;
-            pointer-events: none;
-            font-size: 14px;
-        }
+      .value-label {
+        text-anchor: middle;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .sample-size {
+        text-anchor: middle;
+        font-size: 11px;
+        fill: #666;
+      }
+
+      .tooltip {
+        position: absolute;
+        padding: 10px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        border-radius: 5px;
+        pointer-events: none;
+        font-size: 14px;
+      }
+
+      .legend-item {
+        font-size: 12px;
+      }
+
+      .info-box {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #3498db;
+      }
+
+      .info-title {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #2c3e50;
+        margin-bottom: 10px;
+      }
+
+      .info-content {
+        color: #666;
+        line-height: 1.6;
+        font-size: 0.95rem;
+      }
+
+      .info-highlight {
+        font-weight: 500;
+        color: #2c3e50;
+      }
+
+      .info-list {
+        margin-top: 10px;
+        padding-left: 20px;
+      }
+
+      .info-list li {
+        margin-bottom: 8px;
+        color: #666;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="container">
-        <h1>Penggunaan Sepeda Berdasarkan Musim dan Tipe Pengguna</h1>
-        <div id="chart"></div>
+      <h1>Penggunaan Sepeda Berdasarkan Musim dan Tipe Pengguna</h1>
+      <div class="subtitle">
+        Analisis perbandingan pola penggunaan antara pengguna casual dan
+        registered
+      </div>
+      <div id="chart"></div>
+
+      <div class="info-box">
+        <div class="info-title">
+          Analisis Pola Penggunaan Sepeda Berdasarkan Musim
+        </div>
+        <div class="info-content">
+          Visualisasi ini menampilkan perbandingan antara dua tipe pengguna
+          sepeda sepanjang musim:
+          <ul class="info-list">
+            <li>
+              <span class="info-highlight">Pengguna Casual:</span> Pengguna yang
+              menyewa sepeda secara temporer tanpa registrasi.
+            </li>
+            <li>
+              <span class="info-highlight">Pengguna Registered:</span> Pengguna
+              yang telah terdaftar dalam sistem dengan membership.
+            </li>
+          </ul>
+          <p>Beberapa insight penting yang dapat diambil:</p>
+          <ul class="info-list">
+            <li>
+              Pengguna terdaftar (registered) secara konsisten menunjukkan
+              jumlah yang lebih tinggi di semua musim.
+            </li>
+            <li>
+              Puncak penggunaan sepeda untuk kedua tipe pengguna terjadi pada
+              musim panas (Summer).
+            </li>
+            <li>
+              Musim dingin (Winter) menunjukkan penurunan penggunaan yang
+              signifikan untuk kedua tipe pengguna.
+            </li>
+            <li>
+              Pola penggunaan sepeda menunjukkan tren musiman yang jelas untuk
+              kedua kelompok pengguna.
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
 
     <script>
-        // Set up dimensions and margins
-        const margin = { top: 50, right: 150, bottom: 70, left: 80 },
-            width = 960 - margin.left - margin.right,
-            height = 500 - margin.top - margin.bottom;
+      // Set up dimensions and margins with better spacing
+      const margin = { top: 50, right: 150, bottom: 70, left: 80 },
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
 
-        // Create SVG element
-        const svg = d3.select("#chart")
-            .append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("transform", `translate(${margin.left}, ${margin.top})`);
+      // Create SVG element with better sizing
+      const svg = d3
+        .select("#chart")
+        .append("svg")
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .attr(
+          "viewBox",
+          `0 0 ${width + margin.left + margin.right} ${
+            height + margin.top + margin.bottom
+          }`
+        )
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-        // Create tooltip div
-        const tooltip = d3.select("body").append("div")
-            .attr("class", "tooltip")
-            .style("opacity", 0);
+      // Create enhanced tooltip
+      const tooltip = d3
+        .select("body")
+        .append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
 
-        // Load and process data
-        d3.csv("data/cleaned_day.csv").then(function (data) {
-            // Process data for seasonal usage by user type
-            const seasonData = d3.rollup(
-                data,
-                v => ({
-                    casual: d3.mean(v, d => +d.casual),
-                    registered: d3.mean(v, d => +d.registered),
-                    count: v.length
-                }),
-                d => d.season_name
-            );
+      // Load and process data with improved color scheme
+      d3.csv("data/cleaned_day.csv").then(function (data) {
+        // Process data for seasonal usage by user type
+        const seasonData = d3.rollup(
+          data,
+          (v) => ({
+            casual: d3.mean(v, (d) => +d.casual),
+            registered: d3.mean(v, (d) => +d.registered),
+            count: v.length,
+          }),
+          (d) => d.season_name
+        );
 
-            // Convert Map to array of objects and prepare for grouped bar chart
-            const seasonArray = Array.from(seasonData, ([key, value]) => ({
-                season: key,
-                casual: value.casual,
-                registered: value.registered,
-                count: value.count
-            }));
+        // Convert Map to array of objects and prepare for grouped bar chart
+        const seasonArray = Array.from(seasonData, ([key, value]) => ({
+          season: key,
+          casual: value.casual,
+          registered: value.registered,
+          count: value.count,
+        }));
 
-            // Define the order of seasons
-            const seasonOrder = ["Spring", "Summer", "Fall", "Winter"];
+        // Define the order of seasons
+        const seasonOrder = ["Spring", "Summer", "Fall", "Winter"];
 
-            // Sort data according to season order
-            seasonArray.sort((a, b) => seasonOrder.indexOf(a.season) - seasonOrder.indexOf(b.season));
+        // Sort data according to season order
+        seasonArray.sort(
+          (a, b) =>
+            seasonOrder.indexOf(a.season) - seasonOrder.indexOf(b.season)
+        );
 
-            // Create data for grouped bars
-            const barData = [];
-            seasonArray.forEach(d => {
-                barData.push({
-                    season: d.season,
-                    type: "casual",
-                    value: d.casual
-                });
-                barData.push({
-                    season: d.season,
-                    type: "registered",
-                    value: d.registered
-                });
-            });
-
-            // Set up scales
-            const x0 = d3.scaleBand()
-                .domain(seasonOrder)
-                .range([0, width])
-                .padding(0.1);
-
-            const x1 = d3.scaleBand()
-                .domain(["casual", "registered"])
-                .range([0, x0.bandwidth()])
-                .padding(0.05);
-
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(barData, d => d.value) * 1.1])
-                .range([height, 0]);
-
-            // Color scale for user types
-            const color = d3.scaleOrdinal()
-                .domain(["casual", "registered"])
-                .range(["#ff9999", "#66b3ff"]);
-
-            // Draw x axis
-            svg.append("g")
-                .attr("transform", `translate(0, ${height})`)
-                .call(d3.axisBottom(x0))
-                .attr("font-size", "12px");
-
-            // Draw y axis
-            svg.append("g")
-                .call(d3.axisLeft(y))
-                .attr("font-size", "12px");
-
-            // Y axis label
-            svg.append("text")
-                .attr("transform", "rotate(-90)")
-                .attr("y", -60)
-                .attr("x", -height / 2)
-                .attr("dy", "1em")
-                .style("text-anchor", "middle")
-                .text("Rata-rata Penggunaan")
-                .attr("font-size", "14px");
-
-            // X axis label
-            svg.append("text")
-                .attr("y", height + 40)
-                .attr("x", width / 2)
-                .style("text-anchor", "middle")
-                .text("Musim")
-                .attr("font-size", "14px");
-
-            // Create grouped bars
-            svg.selectAll(".bar-group")
-                .data(barData)
-                .enter()
-                .append("rect")
-                .attr("class", "bar")
-                .attr("x", d => x0(d.season) + x1(d.type))
-                .attr("width", x1.bandwidth())
-                .attr("y", d => y(d.value))
-                .attr("height", d => height - y(d.value))
-                .attr("fill", d => color(d.type))
-                .on("mouseover", function (event, d) {
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html(`<strong>${d.season} - ${d.type === "casual" ? "Casual" : "Registered"}</strong><br>
-                                 Rata-rata: ${d.value.toFixed(0)}`)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function () {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
-
-            // Add value labels on top of bars
-            svg.selectAll(".value-label")
-                .data(barData)
-                .enter()
-                .append("text")
-                .attr("class", "value-label")
-                .attr("x", d => x0(d.season) + x1(d.type) + x1.bandwidth() / 2)
-                .attr("y", d => y(d.value) - 5)
-                .text(d => Math.round(d.value));
-
-            // Add legend - positioned outside the chart area
-            const legend = svg.append("g")
-                .attr("transform", `translate(${width + 20}, 0)`);
-
-            // Casual
-            legend.append("rect")
-                .attr("width", 18)
-                .attr("height", 18)
-                .attr("fill", "#ff9999");
-
-            legend.append("text")
-                .attr("x", 24)
-                .attr("y", 9)
-                .attr("dy", ".35em")
-                .text("Casual");
-
-            // Registered
-            legend.append("rect")
-                .attr("width", 18)
-                .attr("height", 18)
-                .attr("y", 30)
-                .attr("fill", "#66b3ff");
-
-            legend.append("text")
-                .attr("x", 24)
-                .attr("y", 39)
-                .attr("dy", ".35em")
-                .text("Registered");
+        // Create data for grouped bars
+        const barData = [];
+        seasonArray.forEach((d) => {
+          barData.push({
+            season: d.season,
+            type: "casual",
+            value: d.casual,
+          });
+          barData.push({
+            season: d.season,
+            type: "registered",
+            value: d.registered,
+          });
         });
-    </script>
-</body>
 
+        // Set up scales
+        const x0 = d3
+          .scaleBand()
+          .domain(seasonOrder)
+          .range([0, width])
+          .padding(0.1);
+
+        const x1 = d3
+          .scaleBand()
+          .domain(["casual", "registered"])
+          .range([0, x0.bandwidth()])
+          .padding(0.05);
+
+        const y = d3
+          .scaleLinear()
+          .domain([0, d3.max(barData, (d) => d.value) * 1.1])
+          .range([height, 0]);
+
+        // Enhanced color scale
+        const color = d3
+          .scaleOrdinal()
+          .domain(["casual", "registered"])
+          .range(["#3498db", "#2ecc71"]); // More professional colors
+
+        // Draw x axis
+        svg
+          .append("g")
+          .attr("transform", `translate(0, ${height})`)
+          .call(d3.axisBottom(x0))
+          .attr("font-size", "12px");
+
+        // Draw y axis
+        svg.append("g").call(d3.axisLeft(y)).attr("font-size", "12px");
+
+        // Y axis label
+        svg
+          .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", -60)
+          .attr("x", -height / 2)
+          .attr("dy", "1em")
+          .style("text-anchor", "middle")
+          .text("Rata-rata Penggunaan")
+          .attr("font-size", "14px");
+
+        // X axis label
+        svg
+          .append("text")
+          .attr("y", height + 40)
+          .attr("x", width / 2)
+          .style("text-anchor", "middle")
+          .text("Musim")
+          .attr("font-size", "14px");
+
+        // Create grouped bars with animations
+        const bars = svg
+          .selectAll(".bar-group")
+          .data(barData)
+          .enter()
+          .append("rect")
+          .attr("class", "bar")
+          .attr("x", (d) => x0(d.season) + x1(d.type))
+          .attr("width", x1.bandwidth())
+          .attr("y", height) // Start from bottom
+          .attr("height", 0) // Start with height 0
+          .attr("fill", (d) => color(d.type));
+
+        // Add animation
+        bars
+          .transition()
+          .duration(800)
+          .delay((d, i) => i * 50)
+          .attr("y", (d) => y(d.value))
+          .attr("height", (d) => height - y(d.value));
+
+        // Enhanced tooltip interaction
+        bars
+          .on("mouseover", function (event, d) {
+            d3.select(this)
+              .transition()
+              .duration(200)
+              .attr("fill-opacity", 0.8);
+
+            tooltip.transition().duration(200).style("opacity", 0.9);
+
+            tooltip
+              .html(
+                `
+                <strong>${d.season} - ${
+                  d.type === "casual" ? "Casual" : "Registered"
+                }</strong><br>
+                Rata-rata: ${d.value.toFixed(0)} pengguna<br>
+                ${
+                  d.type === "casual"
+                    ? "Pengguna tidak terdaftar"
+                    : "Pengguna terdaftar"
+                }
+            `
+              )
+              .style("left", event.pageX + 10 + "px")
+              .style("top", event.pageY - 28 + "px");
+          })
+          .on("mouseout", function () {
+            d3.select(this).transition().duration(200).attr("fill-opacity", 1);
+
+            tooltip.transition().duration(500).style("opacity", 0);
+          });
+
+        // Animated value labels
+        svg
+          .selectAll(".value-label")
+          .data(barData)
+          .enter()
+          .append("text")
+          .attr("class", "value-label")
+          .attr("x", (d) => x0(d.season) + x1(d.type) + x1.bandwidth() / 2)
+          .attr("y", height)
+          .attr("opacity", 0)
+          .text((d) => Math.round(d.value))
+          .transition()
+          .duration(800)
+          .delay((d, i) => i * 50)
+          .attr("y", (d) => y(d.value) - 5)
+          .attr("opacity", 1);
+
+        // Enhanced legend
+        const legend = svg
+          .append("g")
+          .attr("transform", `translate(${width + 20}, 0)`);
+
+        const legendItems = [
+          { label: "Casual", color: color("casual") },
+          { label: "Registered", color: color("registered") },
+        ];
+
+        legendItems.forEach((item, i) => {
+          const legendGroup = legend
+            .append("g")
+            .attr("transform", `translate(0, ${i * 25})`);
+
+          legendGroup
+            .append("rect")
+            .attr("width", 18)
+            .attr("height", 18)
+            .attr("fill", item.color)
+            .attr("rx", 2);
+
+          legendGroup
+            .append("text")
+            .attr("x", 24)
+            .attr("y", 9)
+            .attr("dy", ".35em")
+            .attr("class", "legend-item")
+            .text(item.label);
+        });
+      });
+    </script>
+  </body>
 </html>
