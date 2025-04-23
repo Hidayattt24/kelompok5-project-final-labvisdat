@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengaruh Kondisi Cuaca Terhadap Penggunaan Sepeda</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .bar {
+            transition: fill 0.3s;
+        }
+
+        .bar:hover {
+            fill-opacity: 0.8;
+        }
+
+        .value-label {
+            text-anchor: middle;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .sample-size {
+            text-anchor: middle;
+            font-size: 11px;
+            fill: #666;
+        }
+
+        .tooltip {
+            position: absolute;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 5px;
+            pointer-events: none;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Pengaruh Kondisi Cuaca Terhadap Penggunaan Sepeda</h1>
+        <div id="chart"></div>
+    </div>
+
+    <script>
+        // Set up dimensions and margins
+        const margin = { top: 50, right: 30, bottom: 70, left: 80 },
+            width = 960 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
+
+        // Create SVG element
+        const svg = d3.select("#chart")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+        // Create tooltip div
+        const tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+        // Load and process data
+        d3.csv("data/cleaned_day.csv").then(function (data) {
+            // Process data for weather usage
+            const weatherData = d3.rollup(
+                data,
+                v => ({
+                    mean: d3.mean(v, d => +d.cnt),
+                    count: v.length
+                }),
+                d => d.weather_name
+            );
+
+            // Convert Map to array of objects
+            const weatherArray = Array.from(weatherData, ([key, value]) => ({
+                weather: key,
+                mean: value.mean,
+                count: value.count
+            }));
+
+            // Sort by mean (descending)
+            weatherArray.sort((a, b) => b.mean - a.mean);
+
+            // Set up scales
+            const x = d3.scaleBand()
+                .domain(weatherArray.map(d => d.weather))
+                .range([0, width])
+                .padding(0.3);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(weatherArray, d => d.mean) * 1.1])
+                .range([height, 0]);
+
+            // Create color scale based on weather conditions
+            const color = d3.scaleOrdinal()
+                .domain(weatherArray.map(d => d.weather))
+                .range(['#2ecc71', '#3498db', '#e74c3c', '#95a5a6']);
+
+            // Draw x axis
+            svg.append("g")
+                .attr("transform", `translate(0, ${height})`)
+                .call(d3.axisBottom(x))
+                .selectAll("text")
+                .attr("font-size", "12px");
+
+            // Draw y axis
+            svg.append("g")
+                .call(d3.axisLeft(y))
+                .attr("font-size", "12px");
+
+            // Y axis label
+            svg.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -60)
+                .attr("x", -height / 2)
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .text("Rata-rata Penggunaan")
+                .attr("font-size", "14px");
+
+            // X axis label
+            svg.append("text")
+                .attr("y", height + 50)
+                .attr("x", width / 2)
+                .style("text-anchor", "middle")
+                .text("Kondisi Cuaca")
+                .attr("font-size", "14px");
+
+            // Create bars
+            svg.selectAll(".bar")
+                .data(weatherArray)
+                .enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x(d.weather))
+                .attr("width", x.bandwidth())
+                .attr("y", d => y(d.mean))
+                .attr("height", d => height - y(d.mean))
+                .attr("fill", d => color(d.weather))
+                .on("mouseover", function (event, d) {
+                    d3.select(this).attr("fill-opacity", 0.8);
+                    tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    tooltip.html(`<strong>${d.weather}</strong><br>
+                                 Rata-rata: ${d.mean.toFixed(0)}<br>
+                                 Jumlah Hari: ${d.count}`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function (event, d) {
+                    d3.select(this).attr("fill-opacity", 1);
+                    tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
+
+            // Add value labels on top of bars
+            svg.selectAll(".value-label")
+                .data(weatherArray)
+                .enter()
+                .append("text")
+                .attr("class", "value-label")
+                .attr("x", d => x(d.weather) + x.bandwidth() / 2)
+                .attr("y", d => y(d.mean) - 10)
+                .text(d => Math.round(d.mean));
+        });
+    </script>
+</body>
+
+</html>

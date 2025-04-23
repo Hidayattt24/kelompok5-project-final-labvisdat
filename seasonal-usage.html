@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rata-rata Penggunaan Sepeda Berdasarkan Musim</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f8f9fa;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+      }
+
+      .tooltip {
+        position: absolute;
+        padding: 10px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        border-radius: 5px;
+        pointer-events: none;
+        font-size: 14px;
+      }
+
+      .grid line {
+        stroke: lightgrey;
+        stroke-opacity: 0.7;
+        shape-rendering: crispEdges;
+      }
+
+      .grid path {
+        stroke-width: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>Rata-rata Penggunaan Sepeda Berdasarkan Musim</h1>
+      <div id="chart"></div>
+    </div>
+
+    <script>
+      // Set up dimensions and margins
+      const margin = { top: 50, right: 50, bottom: 80, left: 80 },
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+      // Create SVG element
+      const svg = d3
+        .select("#chart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+      // Create tooltip div
+      const tooltip = d3
+        .select("body")
+        .append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
+
+      // Define colors for seasons
+      const seasonColors = {
+        1: "#4B5BA6", // Summer (purple)
+        2: "#2A6B74", // Fall (teal)
+        3: "#3A9D88", // Winter (green)
+        4: "#8ECB5A", // Spring (light green)
+      };
+
+      const seasonNames = {
+        1: "Summer",
+        2: "Fall",
+        3: "Winter",
+        4: "Spring",
+      };
+
+      // Load and process data
+      d3.csv("data/cleaned_hour.csv").then(function (data) {
+        // Process data for seasonal usage
+        const seasonalData = d3.rollup(
+          data,
+          (v) => ({
+            mean: d3.mean(v, (d) => +d.cnt),
+            std: d3.deviation(v, (d) => +d.cnt),
+            count: v.length,
+          }),
+          (d) => +d.season
+        );
+
+        // Convert Map to array of objects
+        const seasonalArray = Array.from(seasonalData, ([key, value]) => ({
+          season: key,
+          seasonName: seasonNames[key],
+          mean: value.mean,
+          std: value.std,
+          count: value.count,
+        }));
+
+        // Sort by season
+        seasonalArray.sort((a, b) => a.season - b.season);
+
+        // Set up scales
+        const x = d3
+          .scaleBand()
+          .domain(seasonalArray.map((d) => d.seasonName))
+          .range([0, width])
+          .padding(0.4);
+
+        const y = d3
+          .scaleLinear()
+          .domain([0, d3.max(seasonalArray, (d) => d.mean) * 1.1])
+          .range([height, 0])
+          .nice();
+
+        // Add background rect
+        svg
+          .append("rect")
+          .attr("width", width)
+          .attr("height", height)
+          .attr("fill", "#f0f2f8");
+
+        // Add horizontal grid lines
+        svg
+          .append("g")
+          .attr("class", "grid")
+          .call(d3.axisLeft(y).tickSize(-width).tickFormat(""));
+
+        // Draw x axis
+        svg
+          .append("g")
+          .attr("transform", `translate(0, ${height})`)
+          .call(d3.axisBottom(x))
+          .attr("font-size", "12px");
+
+        // Draw y axis
+        svg.append("g").call(d3.axisLeft(y)).attr("font-size", "12px");
+
+        // Y axis label
+        svg
+          .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", -60)
+          .attr("x", -height / 2)
+          .attr("dy", "1em")
+          .style("text-anchor", "middle")
+          .text("Rata-rata Penggunaan")
+          .attr("font-size", "14px");
+
+        // X axis label
+        svg
+          .append("text")
+          .attr("y", height + 40)
+          .attr("x", width / 2)
+          .style("text-anchor", "middle")
+          .text("Musim")
+          .attr("font-size", "14px");
+
+        // Add bars
+        svg
+          .selectAll(".bar")
+          .data(seasonalArray)
+          .enter()
+          .append("rect")
+          .attr("class", "bar")
+          .attr("x", (d) => x(d.seasonName))
+          .attr("y", (d) => y(d.mean))
+          .attr("width", x.bandwidth())
+          .attr("height", (d) => height - y(d.mean))
+          .attr("fill", (d) => seasonColors[d.season])
+          .on("mouseover", function (event, d) {
+            tooltip.transition().duration(200).style("opacity", 0.9);
+            tooltip
+              .html(
+                `<strong>${d.seasonName}</strong><br>
+                             Rata-rata: ${d.mean.toFixed(0)}<br>
+                             Std Dev: ${d.std.toFixed(2)}<br>
+                             Jumlah Data: ${d.count}`
+              )
+              .style("left", event.pageX + 10 + "px")
+              .style("top", event.pageY - 28 + "px");
+          })
+          .on("mouseout", function () {
+            tooltip.transition().duration(500).style("opacity", 0);
+          });
+
+        // Add value labels on top of bars
+        svg
+          .selectAll(".value-label")
+          .data(seasonalArray)
+          .enter()
+          .append("text")
+          .attr("class", "value-label")
+          .attr("x", (d) => x(d.seasonName) + x.bandwidth() / 2)
+          .attr("y", (d) => y(d.mean) - 10)
+          .attr("text-anchor", "middle")
+          .text((d) => Math.round(d.mean))
+          .attr("font-size", "12px")
+          .attr("font-weight", "bold");
+      });
+    </script>
+  </body>
+</html>

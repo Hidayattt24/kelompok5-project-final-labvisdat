@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analisis Data Bike Sharing</title>
+    <style>
+      :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3f37c9;
+        --accent-color: #4cc9f0;
+        --dark-color: #2b2d42;
+        --light-color: #f8f9fa;
+        --success-color: #4ade80;
+        --warning-color: #fbbf24;
+        --danger-color: #f87171;
+        --text-color: #374151;
+        --text-secondary: #6b7280;
+        --radius: 12px;
+        --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+          sans-serif;
+        background-color: #f3f4f6;
+        color: var(--text-color);
+        line-height: 1.6;
+      }
+
+      header {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color),
+          var(--secondary-color)
+        );
+        color: white;
+        padding: 2.5rem 1.5rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBvcGFjaXR5PSIwLjA1Ij48cGF0aCBkPSJNMCAwaDEwMHYxMDBIMHoiIGZpbGw9IiNGRkYiPjwvcGF0aD48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSIyIiBmaWxsPSIjRkZGIi8+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIgZmlsbD0iI0ZGRiIvPjxjaXJjbGUgY3g9IjcwIiBjeT0iNzAiIHI9IjIiIGZpbGw9IiNGRkYiLz48Y2lyY2xlIGN4PSIyMCIgY3k9IjgwIiByPSIyIiBmaWxsPSIjRkZGIi8+PGNpcmNsZSBjeD0iODAiIGN5PSIyMCIgcj0iMiIgZmlsbD0iI0ZGRiIvPjwvZz48L3N2Zz4=")
+          center/cover no-repeat;
+        opacity: 0.15;
+      }
+
+      .header-content {
+        position: relative;
+        z-index: 1;
+        max-width: 1200px;
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+      }
+
+      .profile {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        font-weight: 500;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+
+      .intro {
+        background-color: white;
+        padding: 2rem;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        margin-bottom: 2.5rem;
+        position: relative;
+        top: -3rem;
+      }
+
+      h2 {
+        color: var(--dark-color);
+        margin-bottom: 1rem;
+        font-weight: 700;
+        font-size: 1.75rem;
+      }
+
+      h3 {
+        color: var(--dark-color);
+        margin-bottom: 1rem;
+        font-weight: 600;
+        font-size: 1.25rem;
+      }
+
+      p {
+        margin-bottom: 1.25rem;
+      }
+
+      ol {
+        margin-left: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      li {
+        margin-bottom: 0.5rem;
+      }
+
+      .visualizations {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .visualization-card {
+        background-color: white;
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      .visualization-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+
+      .visualization-image {
+        width: 100%;
+        height: 220px;
+        background-color: #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        background-size: cover;
+        background-position: center;
+        position: relative;
+      }
+
+      .visualization-image::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          transparent 60%,
+          rgba(0, 0, 0, 0.15)
+        );
+      }
+
+      .visualization-content {
+        padding: 1.5rem;
+      }
+
+      .visualization-title {
+        margin-top: 0;
+        margin-bottom: 0.75rem;
+        color: var(--dark-color);
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+
+      .visualization-description {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        background-color: var(--primary-color);
+        color: white;
+        padding: 0.625rem 1.25rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+      }
+
+      .btn:hover {
+        background-color: var(--secondary-color);
+        transform: translateY(-2px);
+      }
+
+      .btn::after {
+        content: "→";
+        margin-left: 0.5rem;
+        transition: transform 0.2s ease;
+      }
+
+      .btn:hover::after {
+        transform: translateX(3px);
+      }
+
+      footer {
+        background-color: white;
+        color: var(--text-secondary);
+        text-align: center;
+        padding: 2rem;
+        margin-top: 3rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 2rem;
+        }
+
+        .intro {
+          padding: 1.5rem;
+        }
+
+        .visualizations {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <div class="header-content">
+        <h1>Analisis Data Bike Sharing</h1>
+        <div class="profile">
+          <p>Kelompok 5 • Project Final Visdat</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <section class="intro">
+        <h2>Proyek Analisis Data</h2>
+        <p>
+          Selamat datang di proyek analisis data Bike Sharing. Proyek ini
+          bertujuan untuk menganalisis pola penggunaan bike sharing berdasarkan
+          berbagai faktor seperti waktu, cuaca, dan tipe pengguna. Berikut
+          adalah beberapa visualisasi interaktif yang telah dibuat untuk
+          menjawab pertanyaan-pertanyaan bisnis.
+        </p>
+
+        <h3>Pertanyaan Bisnis</h3>
+        <ol>
+          <li>
+            Bagaimana pola penggunaan sepeda berdasarkan waktu (musim, hari,
+            jam) dan faktor cuaca?
+          </li>
+          <li>
+            Apa perbedaan karakteristik antara pengguna casual dan registered
+            dalam sistem bike sharing?
+          </li>
+        </ol>
+      </section>
+
+      <section class="visualizations">
+        <div class="visualization-card">
+          <div
+            class="visualization-image"
+            style="background-image: url('images/seasonal-usage.png')"
+          ></div>
+          <div class="visualization-content">
+            <h3 class="visualization-title">Penggunaan Berdasarkan Musim</h3>
+            <p class="visualization-description">
+              Visualisasi rata-rata penggunaan sepeda pada setiap musim dengan
+              perbandingan data historis.
+            </p>
+            <a href="seasonal-usage.html" class="btn">Lihat Visualisasi</a>
+          </div>
+        </div>
+
+        <div class="visualization-card">
+          <div
+            class="visualization-image"
+            style="background-image: url('images/monthly-usage.png')"
+          ></div>
+          <div class="visualization-content">
+            <h3 class="visualization-title">Penggunaan Berdasarkan Bulan</h3>
+            <p class="visualization-description">
+              Visualisasi tren penggunaan sepeda sepanjang tahun dengan
+              highlight untuk setiap musim.
+            </p>
+            <a href="monthly-usage.html" class="btn">Lihat Visualisasi</a>
+          </div>
+        </div>
+
+        <div class="visualization-card">
+          <div
+            class="visualization-image"
+            style="background-image: url('images/daily-usage.png')"
+          ></div>
+          <div class="visualization-content">
+            <h3 class="visualization-title">Penggunaan Berdasarkan Hari</h3>
+            <p class="visualization-description">
+              Visualisasi pola penggunaan sepeda pada setiap hari dalam
+              seminggu, dengan perbedaan antara hari kerja dan akhir pekan.
+            </p>
+            <a href="daily-usage.html" class="btn">Lihat Visualisasi</a>
+          </div>
+        </div>
+
+        <div class="visualization-card">
+          <div
+            class="visualization-image"
+            style="background-image: url('images/hourly-usage.png')"
+          ></div>
+          <div class="visualization-content">
+            <h3 class="visualization-title">Penggunaan Berdasarkan Jam</h3>
+            <p class="visualization-description">
+              Visualisasi pola penggunaan sepeda sepanjang hari dengan highlight
+              untuk periode waktu penting (pagi, siang, sore, malam).
+            </p>
+            <a href="hourly-usage.html" class="btn">Lihat Visualisasi</a>
+          </div>
+        </div>
+
+        <div class="visualization-card">
+          <div
+            class="visualization-image"
+            style="background-image: url('images/weather-usage.png')"
+          ></div>
+          <div class="visualization-content">
+            <h3 class="visualization-title">Penggunaan Berdasarkan Cuaca</h3>
+            <p class="visualization-description">
+              Visualisasi pengaruh kondisi cuaca terhadap penggunaan sepeda
+              dengan analisis tren musiman.
+            </p>
+            <a href="weather-usage.html" class="btn">Lihat Visualisasi</a>
+          </div>
+        </div>
+
+        <div class="visualization-card">
+          <div
+            class="visualization-image"
+            style="background-image: url('images/user-comparison.png')"
+          ></div>
+          <div class="visualization-content">
+            <h3 class="visualization-title">Perbandingan Tipe Pengguna</h3>
+            <p class="visualization-description">
+              Visualisasi perbandingan pola penggunaan antara pengguna casual
+              dan registered, dengan line overlay untuk rasio antara keduanya.
+            </p>
+            <a href="user-comparison.html" class="btn">Lihat Visualisasi</a>
+          </div>
+        </div>
+
+        <div class="visualization-card">
+          <div
+            class="visualization-image"
+            style="background-image: url('images/seasonal-user-comparison.png')"
+          ></div>
+          <div class="visualization-content">
+            <h3 class="visualization-title">
+              Penggunaan Berdasarkan Musim dan Tipe Pengguna
+            </h3>
+            <p class="visualization-description">
+              Visualisasi perbandingan penggunaan sepeda oleh pengguna casual
+              dan registered pada setiap musim.
+            </p>
+            <a href="seasonal-user-comparison.html" class="btn"
+              >Lihat Visualisasi</a
+            >
+          </div>
+        </div>
+
+        <div class="visualization-card">
+          <div
+            class="visualization-image"
+            style="background-image: url('images/weather-relative-impact.png')"
+          ></div>
+          <div class="visualization-content">
+            <h3 class="visualization-title">Pengaruh Relatif Kondisi Cuaca</h3>
+            <p class="visualization-description">
+              Visualisasi persentase penggunaan sepeda pada berbagai kondisi
+              cuaca relatif terhadap kondisi cerah.
+            </p>
+            <a href="weather-relative-impact.html" class="btn"
+              >Lihat Visualisasi</a
+            >
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      <p>&copy; 2025 Kelompok 5 • Project Final Visdat</p>
+    </footer>
+  </body>
+</html>

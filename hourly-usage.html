@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rata-rata Penggunaan Sepeda Berdasarkan Jam</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      :root {
+        --primary-color: #2563eb;
+        --secondary-color: #f97316;
+        --morning-color: #fbbf24;
+        --midday-color: #f59e0b;
+        --evening-color: #dc2626;
+        --night-color: #1e40af;
+        --bg-color: #f8fafc;
+        --card-bg: #ffffff;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --border-color: #e2e8f0;
+        --highlight: #eff6ff;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .dashboard {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-gap: 2rem;
+      }
+
+      .card {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .card:hover {
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        transform: translateY(-5px);
+      }
+
+      .card-header {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .card-body {
+        padding: 2rem;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+      }
+
+      .subtitle {
+        font-size: 1rem;
+        color: var(--text-secondary);
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .line {
+        fill: none;
+        stroke: var(--primary-color);
+        stroke-width: 3;
+        transition: all 0.3s ease;
+      }
+
+      .dot {
+        fill: var(--primary-color);
+        stroke: white;
+        stroke-width: 2;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .dot:hover {
+        stroke-width: 3;
+        r: 7;
+      }
+
+      .period {
+        opacity: 0.15;
+        transition: opacity 0.3s ease;
+      }
+
+      .period:hover {
+        opacity: 0.25;
+      }
+
+      .tooltip {
+        position: absolute;
+        padding: 1rem;
+        background: rgba(15, 23, 42, 0.9);
+        color: white;
+        border-radius: 8px;
+        pointer-events: none;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        z-index: 10;
+        max-width: 250px;
+        line-height: 1.5;
+      }
+
+      .tooltip-title {
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding-bottom: 0.5rem;
+      }
+
+      .annotation {
+        font-size: 0.9rem;
+        font-weight: 600;
+        fill: var(--text-primary);
+      }
+
+      .legend {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+      }
+
+      .legend-item rect {
+        transition: opacity 0.3s ease;
+      }
+
+      .legend-item:hover rect {
+        opacity: 0.3;
+      }
+
+      .grid line {
+        stroke: var(--border-color);
+        stroke-opacity: 0.5;
+      }
+
+      .grid path {
+        stroke-width: 0;
+      }
+
+      .axis text {
+        font-size: 0.85rem;
+        fill: var(--text-secondary);
+      }
+
+      .axis-label {
+        font-size: 1rem;
+        font-weight: 500;
+        fill: var(--text-primary);
+      }
+
+      .info-box {
+        margin-top: 2.5rem;
+        background-color: var(--highlight);
+        border-radius: 8px;
+        padding: 1.5rem;
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        border-left: 4px solid var(--primary-color);
+      }
+
+      .info-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      .info-content {
+        color: var(--text-secondary);
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 1rem;
+        }
+        .card {
+          margin: 0.5rem;
+        }
+        h1 {
+          font-size: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="dashboard">
+        <div class="card">
+          <div class="card-header">
+            <h1>Rata-rata Penggunaan Sepeda Berdasarkan Jam</h1>
+            <div class="subtitle">
+              Analisis pola penggunaan sepeda sepanjang hari dengan pembagian
+              periode waktu
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="chart"></div>
+            <div class="info-box">
+              <div class="info-title">Analisis Pola Harian</div>
+              <div class="info-content">
+                Grafik ini menunjukkan pola penggunaan sepeda selama 24 jam,
+                dengan highlight untuk periode waktu penting. Terlihat dua
+                puncak utama pada pagi hari (jam kerja) dan sore hari (pulang
+                kerja), menunjukkan bahwa sepeda banyak digunakan untuk
+                komuting.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Set up dimensions and margins
+      const margin = { top: 50, right: 150, bottom: 50, left: 80 },
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+      // Create SVG element with increased width to accommodate legend
+      const svg = d3
+        .select("#chart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right + 50)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+      // Create tooltip div
+      const tooltip = d3
+        .select("body")
+        .append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
+
+      // Define period colors
+      const periods = [
+        {
+          name: "Morning Peak",
+          start: 6,
+          end: 9,
+          color: "var(--morning-color)",
+        },
+        { name: "Midday", start: 10, end: 15, color: "var(--midday-color)" },
+        {
+          name: "Evening Peak",
+          start: 16,
+          end: 19,
+          color: "var(--evening-color)",
+        },
+        { name: "Night", start: 20, end: 23, color: "var(--night-color)" },
+      ];
+
+      // Load and process data
+      d3.csv("data/cleaned_hour.csv").then(function (data) {
+        // Process data for hourly usage
+        const hourlyData = d3.rollup(
+          data,
+          (v) => ({
+            mean: d3.mean(v, (d) => +d.cnt),
+            std: d3.deviation(v, (d) => +d.cnt),
+            count: v.length,
+          }),
+          (d) => +d.hr
+        );
+
+        // Convert Map to array of objects
+        const hourlyArray = Array.from(hourlyData, ([key, value]) => ({
+          hour: key,
+          mean: value.mean,
+          std: value.std,
+          count: value.count,
+        }));
+
+        // Sort by hour
+        hourlyArray.sort((a, b) => a.hour - b.hour);
+
+        // Set up scales
+        const x = d3.scaleLinear().domain([0, 23]).range([0, width]);
+
+        const y = d3
+          .scaleLinear()
+          .domain([0, d3.max(hourlyArray, (d) => d.mean) * 1.1])
+          .range([height, 0])
+          .nice();
+
+        // Draw x axis with custom ticks for every hour
+        svg
+          .append("g")
+          .attr("transform", `translate(0, ${height})`)
+          .call(
+            d3
+              .axisBottom(x)
+              .ticks(24)
+              .tickFormat((d) => d)
+          )
+          .attr("font-size", "12px");
+
+        // Draw y axis
+        svg.append("g").call(d3.axisLeft(y)).attr("font-size", "12px");
+
+        // Add horizontal grid lines
+        svg
+          .append("g")
+          .attr("class", "grid")
+          .call(d3.axisLeft(y).tickSize(-width).tickFormat(""));
+
+        // Add vertical grid lines
+        svg
+          .append("g")
+          .attr("class", "grid")
+          .attr("transform", `translate(0, ${height})`)
+          .call(d3.axisBottom(x).ticks(24).tickSize(-height).tickFormat(""));
+
+        // Y axis label
+        svg
+          .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", -60)
+          .attr("x", -height / 2)
+          .attr("dy", "1em")
+          .style("text-anchor", "middle")
+          .text("Rata-rata Penggunaan")
+          .attr("font-size", "14px");
+
+        // X axis label
+        svg
+          .append("text")
+          .attr("y", height + 40)
+          .attr("x", width / 2)
+          .style("text-anchor", "middle")
+          .text("Jam")
+          .attr("font-size", "14px");
+
+        // Add period highlights
+        periods.forEach((period) => {
+          svg
+            .append("rect")
+            .attr("class", "period")
+            .attr("x", x(period.start))
+            .attr("width", x(period.end) - x(period.start))
+            .attr("y", 0)
+            .attr("height", height)
+            .attr("fill", period.color);
+        });
+
+        // Night period (crossing midnight)
+        svg
+          .append("rect")
+          .attr("class", "period")
+          .attr("x", x(0))
+          .attr("width", x(5) - x(0))
+          .attr("y", 0)
+          .attr("height", height)
+          .attr("fill", "blue");
+
+        // Define line generator
+        const line = d3
+          .line()
+          .x((d) => x(d.hour))
+          .y((d) => y(d.mean))
+          .curve(d3.curveMonotoneX);
+
+        // Add the line
+        svg
+          .append("path")
+          .datum(hourlyArray)
+          .attr("class", "line")
+          .attr("d", line);
+
+        // Add dots
+        svg
+          .selectAll(".dot")
+          .data(hourlyArray)
+          .enter()
+          .append("circle")
+          .attr("class", "dot")
+          .attr("cx", (d) => x(d.hour))
+          .attr("cy", (d) => y(d.mean))
+          .attr("r", 5)
+          .on("mouseover", function (event, d) {
+            d3.select(this).attr("r", 7);
+            tooltip.transition().duration(200).style("opacity", 0.9);
+            tooltip
+              .html(
+                `<strong>Jam ${d.hour}:00</strong><br>
+                                 Rata-rata: ${d.mean.toFixed(0)}<br>
+                                 Std Dev: ${d.std.toFixed(2)}<br>
+                                 Jumlah Data: ${d.count}`
+              )
+              .style("left", event.pageX + 10 + "px")
+              .style("top", event.pageY - 28 + "px");
+          })
+          .on("mouseout", function () {
+            d3.select(this).attr("r", 5);
+            tooltip.transition().duration(500).style("opacity", 0);
+          });
+
+        // Add key annotations
+        const annotations = [
+          { hour: 8, text: "Morning Peak", offsetY: -30 },
+          { hour: 17, text: "Evening Peak", offsetY: -30 },
+        ];
+
+        annotations.forEach((a) => {
+          const dataPoint = hourlyArray.find((d) => d.hour === a.hour);
+          if (dataPoint) {
+            // Add annotation line
+            svg
+              .append("line")
+              .attr("x1", x(dataPoint.hour))
+              .attr("y1", y(dataPoint.mean))
+              .attr("x2", x(dataPoint.hour))
+              .attr("y2", y(dataPoint.mean) + a.offsetY)
+              .attr("stroke", "black")
+              .attr("stroke-width", 1.5)
+              .attr("stroke-dasharray", "3,3");
+
+            // Add annotation text
+            svg
+              .append("text")
+              .attr("class", "annotation")
+              .attr("x", x(dataPoint.hour))
+              .attr("y", y(dataPoint.mean) + a.offsetY - 5)
+              .attr("text-anchor", "middle")
+              .text(a.text);
+          }
+        });
+
+        // Add legend for time periods with adjusted positioning
+        const legend = svg
+          .append("g")
+          .attr("class", "legend")
+          .attr("transform", `translate(${width + 30}, 20)`);
+
+        periods.forEach((period, i) => {
+          legend
+            .append("rect")
+            .attr("x", 0)
+            .attr("y", i * 25)
+            .attr("width", 20)
+            .attr("height", 20)
+            .attr("fill", period.color)
+            .attr("opacity", 0.2);
+
+          legend
+            .append("text")
+            .attr("x", 25)
+            .attr("y", i * 25 + 15)
+            .text(`${period.name} (${period.start}-${period.end})`);
+        });
+
+        // Add Night/Early Morning to legend (special case)
+        legend
+          .append("rect")
+          .attr("x", 0)
+          .attr("y", periods.length * 25)
+          .attr("width", 20)
+          .attr("height", 20)
+          .attr("fill", "blue")
+          .attr("opacity", 0.2);
+
+        legend
+          .append("text")
+          .attr("x", 25)
+          .attr("y", periods.length * 25 + 15)
+          .text("Night/Early Morning (0-5, 20-23)");
+      });
+    </script>
+  </body>
+</html>
