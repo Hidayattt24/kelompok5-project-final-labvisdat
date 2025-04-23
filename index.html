@@ -236,10 +236,99 @@
           grid-template-columns: 1fr;
         }
       }
+
+      .mobile-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        text-align: center;
+        padding: 2rem;
+        color: white;
+        animation: fadeIn 0.5s ease-out;
+      }
+
+      .mobile-overlay-content {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 2rem;
+        border-radius: var(--radius);
+        max-width: 90%;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .mobile-overlay-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        animation: float 3s ease-in-out infinite;
+      }
+
+      .mobile-overlay h2 {
+        color: white;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+      }
+
+      .mobile-overlay p {
+        opacity: 0.9;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+
+      @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+      }
+
+      @keyframes float {
+        0% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+        100% {
+            transform: translateY(0px);
+        }
+      }
+
+      @media (max-width: 1024px) {
+        .mobile-overlay {
+            display: flex;
+        }
+        .container, header, footer {
+            display: none;
+        }
+      }
     </style>
   </head>
 
   <body>
+    <div class="mobile-overlay">
+      <div class="mobile-overlay-content">
+        <div class="mobile-overlay-icon">🖥️</div>
+        <h2>Desktop Only</h2>
+        <p>
+          Maaf, visualisasi ini hanya dapat diakses melalui desktop untuk pengalaman yang optimal. 
+          Silakan buka kembali menggunakan laptop atau komputer Anda.
+        </p>
+      </div>
+    </div>
+
     <header>
       <div class="header-content">
         <h1>Analisis Data Bike Sharing</h1>
@@ -277,7 +366,7 @@
         <div class="visualization-card">
           <div
             class="visualization-image"
-            style="background-image: url('images/seasonal-usage.png')"
+            style="background-image: url('assets/image/1.jpg')"
           ></div>
           <div class="visualization-content">
             <h3 class="visualization-title">Penggunaan Berdasarkan Musim</h3>
@@ -292,7 +381,7 @@
         <div class="visualization-card">
           <div
             class="visualization-image"
-            style="background-image: url('images/monthly-usage.png')"
+            style="background-image: url('assets/image/2.jpg')"
           ></div>
           <div class="visualization-content">
             <h3 class="visualization-title">Penggunaan Berdasarkan Bulan</h3>
@@ -307,7 +396,7 @@
         <div class="visualization-card">
           <div
             class="visualization-image"
-            style="background-image: url('images/daily-usage.png')"
+            style="background-image: url('assets/image/3.jpg')"
           ></div>
           <div class="visualization-content">
             <h3 class="visualization-title">Penggunaan Berdasarkan Hari</h3>
@@ -322,7 +411,7 @@
         <div class="visualization-card">
           <div
             class="visualization-image"
-            style="background-image: url('images/hourly-usage.png')"
+            style="background-image: url(assets/image/4.jpg)"
           ></div>
           <div class="visualization-content">
             <h3 class="visualization-title">Penggunaan Berdasarkan Jam</h3>
@@ -337,7 +426,7 @@
         <div class="visualization-card">
           <div
             class="visualization-image"
-            style="background-image: url('images/weather-usage.png')"
+            style="background-image: url('assets/image/5.jpg')"
           ></div>
           <div class="visualization-content">
             <h3 class="visualization-title">Penggunaan Berdasarkan Cuaca</h3>
@@ -352,7 +441,7 @@
         <div class="visualization-card">
           <div
             class="visualization-image"
-            style="background-image: url('images/user-comparison.png')"
+            style="background-image: url('assets/image/6.jpg')"
           ></div>
           <div class="visualization-content">
             <h3 class="visualization-title">Perbandingan Tipe Pengguna</h3>
@@ -367,7 +456,7 @@
         <div class="visualization-card">
           <div
             class="visualization-image"
-            style="background-image: url('images/seasonal-user-comparison.png')"
+            style="background-image: url('assets/image/7.jpg')"
           ></div>
           <div class="visualization-content">
             <h3 class="visualization-title">
@@ -386,7 +475,7 @@
         <div class="visualization-card">
           <div
             class="visualization-image"
-            style="background-image: url('images/weather-relative-impact.png')"
+            style="background-image: url('assets/image/8.jpg')"
           ></div>
           <div class="visualization-content">
             <h3 class="visualization-title">Pengaruh Relatif Kondisi Cuaca</h3>
