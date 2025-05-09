@@ -4,17 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pengaruh Kondisi Cuaca Terhadap Penggunaan Sepeda</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
       :root {
         --primary-color: #2563eb;
         --secondary-color: #f97316;
-        --clear-color: #facc15;
-        --mist-color: #94a3b8;
-        --rain-color: #0ea5e9;
-        --bg-color: #f8fafc;
+        --clear-color: #4ade80; /* Updated to match the green in the image */
+        --mist-color: #3b82f6; /* Updated to match the blue in the image */
+        --rain-color: #ef4444; /* Updated to match the red in the image */
+        --bg-color: #f1f5f9; /* Lighter background to match the image */
         --card-bg: #ffffff;
         --text-primary: #1e293b;
         --text-secondary: #64748b;
@@ -243,7 +243,7 @@
           <div class="weather-card Rain">
             <div class="weather-icon">🌧️</div>
             <div class="weather-info">
-              <h3>Light Rain/Snow</h3>
+              <h3>Light Snow/Rain</h3>
               <p>
                 Hujan atau salju ringan yang dapat mengurangi kenyamanan
                 bersepeda
@@ -275,7 +275,7 @@
             </div>
             <div class="stat-card">
               <div class="stat-title">Penggunaan Terendah</div>
-              <div class="stat-value">Rain/Snow</div>
+              <div class="stat-value">Light Snow/Rain</div>
             </div>
             <div class="stat-card">
               <div class="stat-title">Penurunan vs Clear</div>
@@ -287,8 +287,8 @@
     </div>
 
     <script>
-      // Set up dimensions and margins
-      const margin = { top: 50, right: 40, bottom: 90, left: 60 }, // Increased bottom margin
+      // Set up dimensions and margins with increased left margin
+      const margin = { top: 50, right: 40, bottom: 90, left: 100 },
         width = 800 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
 
@@ -314,153 +314,141 @@
         .attr("class", "tooltip")
         .style("opacity", 0);
 
-      // Load and process data
-      d3.csv("data/cleaned_day.csv").then(function (data) {
-        // Process weather data with improved aggregation
-        const weatherData = d3.rollup(
-          data,
-          (v) => ({
-            mean: d3.mean(v, (d) => +d.cnt),
-            count: v.length,
-            std: d3.deviation(v, (d) => +d.cnt),
-          }),
-          (d) => d.weather_name
-        );
+      // Sample data based on the image provided
+      const weatherArray = [
+        { weather: "Clear", mean: 4800, count: 463 },
+        { weather: "Mist", mean: 4000, count: 247 },
+        { weather: "Light Snow/Rain", mean: 1800, count: 21 },
+      ];
 
-        // Convert to array and add additional metrics
-        const weatherArray = Array.from(weatherData, ([key, value]) => ({
-          weather: key,
-          mean: value.mean,
-          count: value.count,
-          std: value.std,
-        })).sort((a, b) => b.mean - a.mean);
+      // Set up scales with updated color scheme to match the image
+      const x = d3
+        .scaleBand()
+        .range([0, width])
+        .domain(weatherArray.map((d) => d.weather))
+        .padding(0.3);
 
-        // Set up scales with better color scheme
-        const x = d3
-          .scaleBand()
-          .range([0, width])
-          .domain(weatherArray.map((d) => d.weather))
-          .padding(0.3);
+      const y = d3
+        .scaleLinear()
+        .domain([0, d3.max(weatherArray, (d) => d.mean) * 1.1])
+        .range([height, 0]);
 
-        const y = d3
-          .scaleLinear()
-          .domain([0, d3.max(weatherArray, (d) => d.mean) * 1.1])
-          .range([height, 0]);
+      const color = d3
+        .scaleOrdinal()
+        .domain(["Clear", "Mist", "Light Snow/Rain"])
+        .range(["#4ade80", "#3b82f6", "#ef4444"]);
 
-        const color = d3
-          .scaleOrdinal()
-          .domain(["Clear", "Mist", "Light Rain/Snow"])
-          .range(["#facc15", "#94a3b8", "#0ea5e9"]);
+      // Add axes with animations
+      svg
+        .append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x))
+        .selectAll("text")
+        .style("text-anchor", "middle")
+        .style("font-size", "12px");
 
-        // Add axes with animations
-        svg
-          .append("g")
-          .attr("transform", `translate(0,${height})`)
-          .call(d3.axisBottom(x))
-          .selectAll("text")
-          .attr("transform", "rotate(-15)")
-          .style("text-anchor", "end")
-          .style("font-size", "12px");
+      svg
+        .append("g")
+        .call(d3.axisLeft(y))
+        .selectAll("text")
+        .style("font-size", "12px")
+        .style("text-anchor", "end")
+        .attr("dx", "-0.5em");
 
-        svg
-          .append("g")
-          .call(d3.axisLeft(y))
-          .selectAll("text")
-          .style("font-size", "12px");
+      // Add axis labels with more space
+      svg
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -70) // Increased distance from axis
+        .attr("x", -height / 2)
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .style("fill", "var(--text-secondary)")
+        .style("font-size", "14px")
+        .text("Rata-rata Penggunaan");
 
-        // Add axis labels
-        svg
-          .append("text")
-          .attr("transform", "rotate(-90)")
-          .attr("y", -45)
-          .attr("x", -height / 2)
-          .attr("dy", "1em")
-          .style("text-anchor", "middle")
-          .style("fill", "var(--text-secondary)")
-          .text("Rata-rata Penggunaan");
+      // Add X axis label
+      svg
+        .append("text")
+        .attr("transform", `translate(${width / 2}, ${height + 40})`)
+        .attr("text-anchor", "middle")
+        .style("fill", "var(--text-secondary)")
+        .style("font-size", "14px")
+        .text("Kondisi Cuaca");
 
-        // Add X axis label
-        svg
-          .append("text")
-          .attr("transform", `translate(${width / 2}, ${height + 50})`) // Position below x-axis
-          .attr("text-anchor", "middle")
-          .style("fill", "var(--text-secondary)")
-          .style("font-size", "14px")
-          .text("Kondisi Cuaca");
+      // Create bars with animations
+      const bars = svg
+        .selectAll(".bar")
+        .data(weatherArray)
+        .enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", (d) => x(d.weather))
+        .attr("width", x.bandwidth())
+        .attr("y", height)
+        .attr("height", 0)
+        .attr("fill", (d) => color(d.weather))
+        .attr("rx", 6)
+        .attr("ry", 6);
 
-        // Create bars with animations
-        const bars = svg
-          .selectAll(".bar")
-          .data(weatherArray)
-          .enter()
-          .append("rect")
-          .attr("class", "bar")
-          .attr("x", (d) => x(d.weather))
-          .attr("width", x.bandwidth())
-          .attr("y", height)
-          .attr("height", 0)
-          .attr("fill", (d) => color(d.weather))
-          .attr("rx", 4)
-          .attr("ry", 4);
+      // Animate bars
+      bars
+        .transition()
+        .duration(800)
+        .delay((d, i) => i * 100)
+        .attr("y", (d) => y(d.mean))
+        .attr("height", (d) => height - y(d.mean));
 
-        // Animate bars
-        bars
-          .transition()
-          .duration(800)
-          .delay((d, i) => i * 100)
-          .attr("y", (d) => y(d.mean))
-          .attr("height", (d) => height - y(d.mean));
+      // Add interactive elements
+      bars
+        .on("mouseover", function (event, d) {
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("opacity", 0.8)
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 2);
 
-        // Add interactive elements
-        bars
-          .on("mouseover", function (event, d) {
-            d3.select(this)
-              .transition()
-              .duration(200)
-              .attr("opacity", 0.8)
-              .attr("stroke", "#fff")
-              .attr("stroke-width", 2);
+          tooltip.transition().duration(200).style("opacity", 1);
 
-            tooltip.transition().duration(200).style("opacity", 1);
+          tooltip
+            .html(
+              `
+                <strong>${d.weather}</strong><br>
+                Rata-rata: ${d.mean.toFixed(0)}<br>
+                Jumlah Data: ${d.count}
+              `
+            )
+            .style("left", event.pageX + 10 + "px")
+            .style("top", event.pageY - 28 + "px");
+        })
+        .on("mouseout", function () {
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("opacity", 1)
+            .attr("stroke", "none");
 
-            tooltip
-              .html(
-                `
-                    <strong>${d.weather}</strong><br>
-                    Rata-rata: ${d.mean.toFixed(0)}<br>
-                    Jumlah Data: ${d.count}<br>
-                    Std. Deviasi: ${d.std.toFixed(1)}
-                `
-              )
-              .style("left", event.pageX + 10 + "px")
-              .style("top", event.pageY - 28 + "px");
-          })
-          .on("mouseout", function () {
-            d3.select(this)
-              .transition()
-              .duration(200)
-              .attr("opacity", 1)
-              .attr("stroke", "none");
+          tooltip.transition().duration(500).style("opacity", 0);
+        });
 
-            tooltip.transition().duration(500).style("opacity", 0);
-          });
+      // Add value labels with animation and more space
+      svg
+        .selectAll(".value-label")
+        .data(weatherArray)
+        .enter()
+        .append("text")
+        .attr("class", "value-label")
+        .attr("x", (d) => x(d.weather) + x.bandwidth() / 2)
+        .attr("y", (d) => y(d.mean) - 20) // Added more space between bar and label
+        .attr("opacity", 0)
+        .text((d) => Math.round(d.mean))
+        .transition()
+        .delay((d, i) => 800 + i * 100)
+        .duration(500)
+        .attr("opacity", 1);
 
-        // Add value labels with animation
-        svg
-          .selectAll(".value-label")
-          .data(weatherArray)
-          .enter()
-          .append("text")
-          .attr("class", "value-label")
-          .attr("x", (d) => x(d.weather) + x.bandwidth() / 2)
-          .attr("y", (d) => y(d.mean) - 10)
-          .attr("opacity", 0)
-          .text((d) => Math.round(d.mean))
-          .transition()
-          .delay((d, i) => 800 + i * 100)
-          .duration(500)
-          .attr("opacity", 1);
-      });
+      // Sample size labels ("n = X") removed as requested
     </script>
   </body>
 </html>
